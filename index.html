@@ -1,0 +1,82 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>人格自我探索 · 20题</title>
+<style>
+:root{--bg:#0f1012;--card:#17181b;--line:#2a2c31;--txt:#f2f3f5;--sub:#9a9ca3;--acc:#6ee7a8;--acc2:#ffd15c}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.6 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif;padding-bottom:40px}
+.wrap{max-width:560px;margin:0 auto;padding:22px 18px}
+h1{font-size:22px;margin:10px 0 4px}.sub{color:var(--sub);font-size:13px;margin-bottom:18px}
+.bar{height:6px;background:#26282d;border-radius:99px;overflow:hidden;margin-bottom:18px}
+.bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .25s}
+.q{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px}
+.q .n{color:var(--sub);font-size:13px}.q .t{font-size:20px;font-weight:600;margin:8px 0 18px;min-height:56px}
+.opts{display:grid;gap:10px}.opt{padding:14px 16px;background:#1d1f23;border:1px solid var(--line);border-radius:12px;font-size:15px;cursor:pointer}
+.opt.on{border-color:var(--acc);background:#16302a;color:#d8ffe9}
+.nav{display:flex;gap:10px;margin-top:18px}
+button{flex:1;padding:14px;border-radius:12px;border:1px solid var(--line);background:#1d1f23;color:var(--txt);font-size:16px;font-weight:600;cursor:pointer}
+button.primary{background:var(--acc);color:#06210f;border-color:var(--acc)}
+button:disabled{opacity:.35}
+textarea,input{width:100%;padding:14px;border-radius:12px;border:1px solid #2a2c31;background:#1d1f23;color:#f2f3f5;font-size:15px;font-family:inherit}
+.result{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px}
+table{width:100%;border-collapse:collapse;font-size:14px;margin:10px 0}th,td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left}th{color:var(--sub);font-weight:500}
+.free{white-space:pre-wrap;font-size:15px;line-height:1.75;margin-top:14px}
+.tip{color:var(--sub);font-size:12px;margin-top:16px;line-height:1.7}
+.cta{display:block;text-align:center;margin-top:16px;padding:15px;border-radius:12px;background:var(--acc2);color:#241c00;font-weight:700;text-decoration:none}
+.row{display:flex;gap:10px;margin-top:12px}
+.tag{display:inline-block;padding:3px 10px;border-radius:99px;background:#2a2c31;color:var(--sub);font-size:12px;margin-left:8px}
+</style></head><body><div class="wrap">
+<h1 id="h">人格自我探索 · 20 题</h1>
+<div class="sub" id="sub">1=很不符合 · 5=非常符合，按第一反应选，约 3 分钟</div>
+<div class="bar"><i id="bar"></i></div><div id="app"></div></div>
+<script>
+const ITEMS=[["E",false,"我是聚会上的活跃分子"],["E",true,"我不太爱说话"],["E",false,"在聚会上我和很多不同的人聊天"],["E",true,"我习惯待在角落"],["A",false,"我能体会别人的感受"],["A",true,"我对别人的问题不感兴趣"],["A",false,"我心软"],["A",true,"我其实不太关心别人"],["C",false,"我会立刻把该做的事做完"],["C",true,"我常忘记把东西放回原处"],["C",false,"我喜欢秩序"],["C",true,"我常把事情弄乱"],["N",false,"我情绪起伏比较频繁"],["N",true,"我大多数时候很放松"],["N",false,"我容易心烦"],["N",true,"我很少感到低落"],["O",false,"我想象力丰富"],["O",true,"我对抽象概念不感兴趣"],["O",true,"我很难理解抽象概念"],["O",true,"我没什么想象力"]];
+const DIMS={E:"外向性",A:"宜人性",C:"尽责性",N:"情绪稳定性",O:"开放性"};
+const BAND={E:{高:"外向、爱热闹、从人身上回血",中:"社交够用，不靠人多充电",低:"偏安静，独处更舒服，不主动找人"},A:{高:"体谅别人、愿意让步、怕给人添麻烦",中:"看人看事分得清，不硬当老好人",低:"直、边界硬、不太照顾别人情绪"},C:{高:"有计划、守时、事情不拖着",中:"该做的会做，偶尔摆烂",低:"随性、拖延、靠 deadline 驱动"},N:{高:"情绪波动大、容易内耗、想得多",中:"情绪基本稳，偶尔起伏",低:"情绪稳、不容易被带跑"},O:{高:"好奇心强、爱抽象、喜欢新鲜",中:"对新东西有兴趣但不沉迷",低:"务实、喜欢确定、不爱空想"}};
+const SEG={student:{label:"学生（在校 / 刚毕业）",ask:{k:"grade",q:"你的年级 / 是否应届？",o:["大一/大二","大三","大四应届","已毕业 1 年内","不便说"]},trouble:["专业/就业方向不确定","考研考公在犹豫","缺实习/项目经历","钱不够用","其他（下面补充）"]},
+newbie:{label:"职场新人（1–5 年）",ask:{k:"years",q:"你工作几年了？",o:["不到 1 年","1–2 年","3–5 年","不便说"]},trouble:["钱少不够花","学不到东西","和领导/同事处不好","想跳槽但没方向","其他（下面补充）"]},
+mid:{label:"职场中年（30 岁以上）",ask:{k:"focus",q:"你现在最想解决的是？",o:["收入/裁员降薪","职业天花板","家庭关系","时间和精力","不便说"]},trouble:["裁员/降薪压力","房贷育儿开销","晋升卡住","家庭关系紧张","其他（下面补充）"]},
+break:{label:"转型 / 待业 / 不确定",ask:{k:"cash",q:"现在的收入能撑多久？",o:["3 个月以内","3–6 个月","半年以上","说不清/不便说"]},trouble:["现金流撑不住","不知道做什么方向","投简历没回音","年龄/空窗焦虑","其他（下面补充）"]}};
+const ans={};let i=0,extra=false;
+const app=document.getElementById("app"),bar=document.getElementById("bar"),h=document.getElementById("h"),sub=document.getElementById("sub");
+const QS=[...ITEMS.map(([d,rev,t],ii)=>({kind:"item",d,rev,t,n:"第 "+(ii+1)+" 题 / 共 26 题"}))];
+function segQ(){const s=SEG[ans.seg]||SEG.student;return [{kind:"seg",t:"你现在最主要的状态是？",n:"最后 6 题 · 1/6"},
+{kind:"choose",key:"segask",t:s.ask.q,o:s.ask.o,n:"2/6"},
+{kind:"choose",key:"trouble",t:"最近最烦的是哪一类？",o:s.trouble,n:"3/6"},
+{kind:"text",key:"detail",t:"能补充一句具体的吗？（选填）",n:"4/6",ph:"比如：上周开会宣布要优化，我最近老想着这事"},
+{kind:"text",key:"name",t:"希望我怎么称呼你？",n:"5/6",ph:"比如：王哥"},
+{kind:"text",key:"want",t:"你最想让报告帮你弄明白什么？（选填）",n:"6/6",ph:"可以不填"}];}
+function all(){return QS.concat(segQ());}
+function render(){const list=all();bar.style.width=(i/list.length*100)+"%";const q=list[i];h.textContent="人格自我探索 · 20 题";sub.textContent="1=很不符合 · 5=非常符合，按第一反应选";
+if(q.kind==="item"){app.innerHTML='<div class="q"><div class="n">'+q.n+'</div><div class="t">'+q.t+'</div><div class="opts" id="o"></div></div>';const o=document.getElementById("o");
+[1,2,3,4,5].forEach(v=>{const b=document.createElement("div");b.className="opt"+(ans["q"+i]===v?" on":"");b.textContent=v+" · "+["很不符合","不太符合","一般","比较符合","非常符合"][v-1];b.onclick=()=>{ans["q"+i]=v;render();setTimeout(next,120)};o.appendChild(b)})}
+else if(q.kind==="seg"){app.innerHTML='<div class="q"><div class="n">'+q.n+'</div><div class="t">'+q.t+'</div><div class="opts" id="o"></div></div>';const o=document.getElementById("o");
+Object.keys(SEG).forEach(k=>{const b=document.createElement("div");b.className="opt"+(ans.seg===k?" on":"");b.textContent=SEG[k].label;b.onclick=()=>{ans.seg=k;render();setTimeout(next,120)};o.appendChild(b)})}
+else if(q.kind==="choose"){app.innerHTML='<div class="q"><div class="n">'+q.n+'</div><div class="t">'+q.t+'</div><div class="opts" id="o"></div></div>';const o=document.getElementById("o");
+q.o.forEach(v=>{const b=document.createElement("div");b.className="opt"+(ans[q.key]===v?" on":"");b.textContent=v;b.onclick=()=>{ans[q.key]=v;render();setTimeout(next,120)};o.appendChild(b)})}
+else{const v=ans[q.key]||"";app.innerHTML='<div class="q"><div class="n">'+q.n+'</div><div class="t">'+q.t+'</div><textarea id="inp" rows="3" placeholder="'+q.ph+'">'+v+'</textarea><div class="nav"><button id="bk">上一题</button><button class="primary" id="nx">下一步</button></div></div>';
+document.getElementById("bk").onclick=prev;document.getElementById("nx").onclick=()=>{ans[q.key]=document.getElementById("inp").value.trim();next()}}}
+function next(){const list=all(),q=list[i];
+if(q.kind==="item"&&!ans["q"+i])return;if(q.kind==="seg"&&!ans.seg)return;if(q.kind==="choose"&&!ans[q.key])return;
+if(i<list.length-1){i++;render()}else{show()}}
+function prev(){if(i>0){i--;render()}}
+function th(m){return m>=3.7?"高":(m<=2.3?"低":"中")}
+function calc(){const s={E:[],A:[],C:[],N:[],O:[]};ITEMS.forEach(([d,rev],idx)=>{const v=ans["q"+idx];s[d].push(rev?6-v:v)});const m={},b={};for(const k in s){m[k]=+(s[k].reduce((a,c)=>a+c,0)/4).toFixed(2);b[k]=th(m[k])}return {m,b}}
+function validity(){const vs=ITEMS.map((_,idx)=>ans["q"+idx]);const same={};vs.forEach(v=>same[v]=(same[v]||0)+1);const max=Math.max(...Object.values(same));const distinct=new Set(vs).size;return {distinct,max,flat:distinct<=2||max>=15}}
+function show(){const list=all();
+if(!ans.segask||!ans.trouble){alert("还差两题必填：状态和最近最烦的事");i=list.length-2;render();return}
+const v=validity();
+if(v.flat){app.innerHTML='<div class="result"><div class="t" style="font-size:20px;font-weight:700">这次测不出明显倾向 <span class="tag">参考度有限</span></div><div class="free">20 题里有 '+v.max+' 题选了同一个分数。这可能是你确实比较均衡，也可能是这次答得比较快或有点犹豫。\n\n这种情况下，硬写一份“人格报告”对你没有帮助。\n\n换个方式：直接告诉我最近一件具体的事（发生了什么、你当时怎么想的），我按你的真实情况给一条更准的判断。</div><a class="cta" href="#" id="wx">加微信，发我一句最近的事</a><div class="row"><button id="rt">重新测一次</button><button id="cp0">复制我的答案</button></div><div class="tip">本结果基于公开 mini-IPIP 条目自评，不构成心理诊断；你的答案只保存在本机。</div></div>';
+document.getElementById("wx").onclick=(e)=>{e.preventDefault();alert("截图或复制答案发给微信即可，我会人工回你一条判断。")};
+document.getElementById("rt").onclick=()=>location.reload();
+document.getElementById("cp0").onclick=copy;bar.style.width="100%";return}
+const {m,b}=calc();let rows="<table><tr><th>维度</th><th>均分</th><th>区间</th></tr>";for(const k in DIMS)rows+="<tr><td>"+DIMS[k]+"</td><td>"+m[k]+"</td><td>"+b[k]+"</td></tr>";rows+="</table>";
+const dom=Object.keys(m).sort((x,y)=>m[y]-m[x]);
+const free="你的性格底色："+DIMS[dom[0]]+"偏"+b[dom[0]]+"（"+m[dom[0]]+"），"+DIMS[dom[1]]+"偏"+b[dom[1]]+"（"+m[dom[1]]+"）。\n\n这个组合常见的表现是："+BAND[dom[0]][b[dom[0]]]+"；同时"+BAND[dom[1]][b[dom[1]]]+"。\n\n[[NAME]]，你最近烦的是「"+ans.trouble+"」（"+(ans.detail||"没补充具体事")+"）。完整报告会结合这个，给出 4 条带动作/场景/成本/验收的建议 + 7 天、30 天清单。";
+h.textContent="你的人格结果";sub.textContent="这不是诊断，只是自我探索的参考";
+app.innerHTML='<div class="result">'+rows+'<div class="free">'+free.replace("[[NAME]]",ans.name||"你")+'</div><a class="cta" href="#" id="buy">19.9 元 · 看完整报告</a><div class="row"><button id="cp">复制我的答案</button><button id="rt">重测</button></div><div class="tip">参考度：较高（'+v.distinct+' 种作答）。本结果基于公开 mini-IPIP 条目自评，由 AI 辅助生成；无量表常模与临床信效度，不构成心理诊断或医疗建议，仅供自我探索参考。你的答案只保存在本机，关闭页面即清空。</div></div>';
+document.getElementById("buy").onclick=(e)=>{e.preventDefault();alert("点“复制我的答案”，发给微信即可")};
+document.getElementById("cp").onclick=copy;document.getElementById("rt").onclick=()=>location.reload();bar.style.width="100%"}
+function copy(){const nums=ITEMS.map((_,idx)=>ans["q"+idx]).join(",");const txt="答案："+nums+"\n状态："+(SEG[ans.seg]||{}).label+"\n"+((SEG[ans.seg]||{}).ask||{}).q+":"+ans.segask+"\n最烦的事："+ans.trouble+"\n补充："+(ans.detail||"")+"\n称呼："+(ans.name||"")+"\n想弄明白："+(ans.want||"");
+navigator.clipboard?.writeText(txt).then(()=>alert("已复制，发给我即可")).catch(()=>prompt("手动复制：",txt))}
+render();
+</script></body></html>
